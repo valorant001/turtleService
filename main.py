@@ -480,25 +480,97 @@ async def joinGoal(request: Request):
             status_code=400
         )
     try:
-        response = crud.turtleInsert("JOINGOAL",requestData)
-        if response:
-            storeData = jsonable_encoder(response)
-            save_logs(json.dumps(requestData),json.dumps(storeData),"JOINGOAL","127.0.0.1")
-            return JSONResponse(
-                content={"status": "success", "data": jsonable_encoder(response)},
+        check_filter = {
+            "uid": requestData.get("uid"),
+            "goal_db_id": requestData.get("goal_db_id"),
+        }
+        checkResponse,data = crud.read_data_with_Specific("CHECKALREADYJOIN","*",check_filter,True)
+        if checkResponse:
+            if str(data['uid']) == str(requestData.get("uid")):
+                return JSONResponse(
+                    content={"status": "error", "message": "User already joined this goal"},
+                    status_code=403
+                )
+            else:
+             return JSONResponse(
+                content={"status": "success", "data": "Something went wrong"},
                 status_code=200
             )
         else:
+            response = crud.turtleInsert("JOINGOAL",requestData)
+            storeData = jsonable_encoder(response)
+            save_logs(json.dumps(requestData),json.dumps(storeData),"JOINGOAL","127.0.0.1")
+            return JSONResponse(
+                content={"status": "success", "data": "Join Successfull"},
+                status_code=200
+            )
+        
+    except Exception as e:
+        save_logs(json.dumps(requestData),json.dumps({"error": str(e)}),"JOINGOAL","127.0.0.1")
+        return JSONResponse(content={"message": str(e)}, status_code=500)
+
+@app.post("/v1/Goal/Calculation")
+async def joinGoal(request: Request):
+    try:
+        requestData = await request.json()
+        if not requestData:
+            return JSONResponse(
+            content={"error": "Request body cannot be empty"},
+            status_code=401
+        )
+        isNull,key = checkNull(requestData)
+        if isNull:
+            return JSONResponse(
+            content={"error": "Parameter cannot be null or empty", "Parameter": key},
+            status_code=400
+        )
+    except Exception:
+        return JSONResponse(
+            content={"error": "Invalid or empty request body"},
+            status_code=400
+        )
+    try:
+        check_filter = {
+            "uid": requestData.get("uid"),
+            "goal_db_id": requestData.get("goal_db_id"),
+        }
+        checkResponse,data = crud.read_data_with_Specific("CHECKALREADYJOIN","*",check_filter,True)
+        if checkResponse:
+            if str(data['uid']) == str(requestData.get("uid")):
                 return JSONResponse(
-                    content={"status": "error", "message": "No Data Found"},
+                    content={"status": "error", "message": "User already joined this goal"},
                     status_code=403
                 )
+            else:
+             return JSONResponse(
+                content={"status": "success", "data": "Something went wrong"},
+                status_code=200
+            )
+        else:
+            response = crud.turtleInsert("JOINGOAL",requestData)
+            storeData = jsonable_encoder(response)
+            save_logs(json.dumps(requestData),json.dumps(storeData),"JOINGOAL","127.0.0.1")
+            return JSONResponse(
+                content={"status": "success", "data": "Join Successfull"},
+                status_code=200
+            )
         
     except Exception as e:
         save_logs(json.dumps(requestData),json.dumps({"error": str(e)}),"JOINGOAL","127.0.0.1")
         return JSONResponse(content={"message": str(e)}, status_code=500)
 
 
+
+
+def calculate_share_amt(goal_id, uid):
+    if goal_id is None or uid is None:
+        raise ValueError("goal_id and uid must be provided")
+    else:
+        response,data = crud.read_data_with_Specific("GETGOAL","*",{"id":goal_id},True)
+        if response:
+            return data
+        else:
+            return 0
 
 
 def save_logs(m_snd,m_reci,m_api,m_ip):

@@ -42,10 +42,19 @@ api_columns = {
         "table": "usr_goals",
         "columns": {"id"}
     },
-    "JOINGOAL": {
+    "JOINGOAL": {   
         "table": "goal_contributors",
-        "columns": {"goal_id", "uid","share_amt","paid_amt","status"}
+        "columns": {"goal_db_id", "uid","paid_amt","share_amt"}
     },
+    "CHECKALREADYJOIN": {   
+        "table": "goal_contributors",
+        "columns": {"goal_db_id", "uid"}
+    },
+    "GOALCALCULATION": {   
+        "table": "goal_contributors",
+        "columns": {"goal_db_id", "uid"}
+    },
+
 }
 def validate_api(api: str, columns: dict[str, any]):
     """Validate API action, table and columns"""
