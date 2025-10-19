@@ -52,14 +52,18 @@ api_columns = {
     },
     "GOALCALCULATION": {   
         "table": "goal_contributors",
-        "columns": {"goal_db_id", "uid"}
+        "columns": {"goal_db_id", "uid",'goal_amt','end_date','totaluser','frequency'}
+    },
+    "GETUSRCURRENTGOALS": {   
+        "table": "usr_goals",
+        "columns": {"uid"}
     },
 
 }
 def validate_api(api: str, columns: dict[str, any]):
     """Validate API action, table and columns"""
     if api not in api_columns:
-        raise ValueError(f"Invalid API action: {api}")
+        raise ValueError(f"Invalid API action: {api}") 
     
     table_info = api_columns[api]
     table, allowed = table_info["table"], table_info["columns"]

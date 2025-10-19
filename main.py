@@ -508,6 +508,42 @@ async def joinGoal(request: Request):
     except Exception as e:
         save_logs(json.dumps(requestData),json.dumps({"error": str(e)}),"JOINGOAL","127.0.0.1")
         return JSONResponse(content={"message": str(e)}, status_code=500)
+    
+
+@app.post("/v1/Goal/GetUsrCurrentGoals")
+async def getUsrCurrentGoals(request: Request):
+    try:
+        requestData = await request.json()
+        if not requestData:
+            return JSONResponse(
+            content={"error": "Request body cannot be empty"},
+            status_code=401
+        )
+        isNull,key = checkNull(requestData)
+        if isNull:
+            return JSONResponse(
+            content={"error": "Parameter cannot be null or empty", "Parameter": key},
+            status_code=400
+        )
+    except Exception:
+        return JSONResponse(
+            content={"error": "Invalid or empty request body"},
+            status_code=400
+        )
+    try:
+
+        checkResponse,data = crud.read_data_with_Specific("GETUSRCURRENTGOALS","*",requestData,False)
+        if checkResponse:
+            storeData = jsonable_encoder(data)
+            save_logs(json.dumps(requestData),json.dumps(storeData),"GETUSRCURRENTGOALS","127.0.0.1")
+            return JSONResponse(
+                content={"status": "success", "data": storeData},
+                status_code=200
+            )
+        
+    except Exception as e:
+        save_logs(json.dumps(requestData),json.dumps({"error": str(e)}),"JOINGOAL","127.0.0.1")
+        return JSONResponse(content={"message": str(e)}, status_code=500)
 
 @app.post("/v1/Goal/Calculation")
 async def joinGoal(request: Request):
@@ -547,11 +583,11 @@ async def joinGoal(request: Request):
                 status_code=200
             )
         else:
-            response = crud.turtleInsert("JOINGOAL",requestData)
-            storeData = jsonable_encoder(response)
-            save_logs(json.dumps(requestData),json.dumps(storeData),"JOINGOAL","127.0.0.1")
+            # response = crud.turtleInsert("JOINGOAL",requestData)
+            # storeData = jsonable_encoder(response)
+            # save_logs(json.dumps(requestData),json.dumps(storeData),"JOINGOAL","127.0.0.1")
             return JSONResponse(
-                content={"status": "success", "data": "Join Successfull"},
+                content={"status": "success", "data": calculate_goal_split(goal_amount=requestData.get("goal_amt"), end_date=requestData.get("end_date"), members_count=requestData.get("totaluser"), frequency=requestData.get("frequency"))},
                 status_code=200
             )
         
@@ -560,6 +596,47 @@ async def joinGoal(request: Request):
         return JSONResponse(content={"message": str(e)}, status_code=500)
 
 
+
+def calculate_goal_split(goal_amount, end_date, members_count, frequency="weekly"):
+    # Convert types safely
+    goal_amount = float(goal_amount)
+    members_count = int(members_count)
+    frequency = frequency.lower()
+
+    # Automatically use today's date
+    start = datetime.today()
+    end = datetime.strptime(end_date, "%d/%m/%Y")
+
+    # Calculate total days
+    total_days = (end - start).days
+    if total_days <= 0:
+        return {"error": "End date must be after today"}
+
+    # Determine period count based on frequency
+    if frequency == "0": #for daily
+        total_periods = total_days
+    elif frequency == "1": #for weekly
+        total_periods = math.ceil(total_days / 7)
+    elif frequency == "2": #for yearly
+        total_periods = math.ceil(total_days / 365)
+    else:
+        return {"error": "Invalid frequency. Use 'daily', 'weekly', or 'yearly'."}
+
+    # Amount per period
+    amount_per_period = goal_amount / total_periods
+    amount_per_member = amount_per_period / members_count
+
+    return {
+        "goal_amount": goal_amount,
+        "frequency": "Daily" if frequency == "0" else "Weekly" if frequency == "1" else "Yearly",
+        "start_date": start.strftime("%d/%m/%Y"),
+        "end_date": end.strftime("%d/%m/%Y"),
+        "total_days": total_days,
+        "total_periods": total_periods,
+        "members_count": members_count,
+        f"amount_total": round(amount_per_period, 2),
+        f"amount_per_member": round(amount_per_member, 2)
+    }
 
 
 def calculate_share_amt(goal_id, uid):
