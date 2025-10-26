@@ -26,8 +26,8 @@ api_columns = {
     },
     "CREATEGOAL": {
         "table": "usr_goals",
-        "columns": {"uid", "goal_id", "goal_amt", "saving_type",
-                     "group_saving", "other_details"}
+        "columns": {"uid", "goal_db_id", "goal_amt", "saving_type",
+                     "group_saving", "members","end_date","start_date"}
     },
     "JOINGOAL": {
         "table": "usr_goals",
