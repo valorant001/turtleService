@@ -238,7 +238,7 @@ async def getAllTransactions(request: Request):
         return JSONResponse(content={"message": str(e)}, status_code=200)
 
 
-@app.post("/v1/Goal/createGoal")
+@app.post("/v1/Goal/CreateGoal")
 async def create_goal_endpoint(request: Request):
     try:
         requestData = await request.json()
@@ -306,78 +306,78 @@ async def create_goal_endpoint(request: Request):
         save_logs(json.dumps(requestData),json.dumps({"error": str(e)}),"JOINGOAL","127.0.0.1")
         return JSONResponse(content={"message": str(e)}, status_code=500)
 
-@app.post("/v1/Goal/Calculate")
-async def calculate_goal_endpoint(request: Request):
-    try:
-        requestData = await request.json()
-        isNull, key = checkNull(requestData)
-        if not requestData:
-            return JSONResponse(
-                content={"error": "Request body cannot be empty"},
-                status_code=400
-            )
-        if isNull:
-            return JSONResponse(
-                content={"error": "Parameter cannot be null or empty", "Parameter": key},
-                status_code=400
-            )
-    except Exception:
-        return JSONResponse(
-            content={"error": "Invalid or empty request body"},
-            status_code=400
-        )
+# @app.post("/v1/Goal/Calculate")
+# async def calculate_goal_endpoint(request: Request):
+#     try:
+#         requestData = await request.json()
+#         isNull, key = checkNull(requestData)
+#         if not requestData:
+#             return JSONResponse(
+#                 content={"error": "Request body cannot be empty"},
+#                 status_code=400
+#             )
+#         if isNull:
+#             return JSONResponse(
+#                 content={"error": "Parameter cannot be null or empty", "Parameter": key},
+#                 status_code=400
+#             )
+#     except Exception:
+#         return JSONResponse(
+#             content={"error": "Invalid or empty request body"},
+#             status_code=400
+#         )
 
-    totalPeriodsRequired = 0
-    completion_date = None
-    dailyInvest = None
-    try:
-        totalUser = int(requestData.get('totaluser', 0))
-        goalamount = float(requestData.get('goalMoney', 0))
-        perUserInvest = float(requestData.get('perUserInvest', 0))  # how much 1 user invests (daily/weekly)
-        totalContribution = perUserInvest * totalUser
+#     totalPeriodsRequired = 0
+#     completion_date = None
+#     dailyInvest = None
+#     try:
+#         totalUser = int(requestData.get('totaluser', 0))
+#         goalamount = float(requestData.get('goalMoney', 0))
+#         perUserInvest = float(requestData.get('perUserInvest', 0))  # how much 1 user invests (daily/weekly)
+#         totalContribution = perUserInvest * totalUser
 
-        if totalContribution > 0:
-            if requestData.get('investType') == 0:  # Daily
-                totalPeriodsRequired = math.ceil(goalamount / totalContribution)
-                delta = timedelta(days=totalPeriodsRequired)
-                dailyInvest = perUserInvest
-            elif requestData.get('investType') == 1:  # Weekly
-                totalPeriodsRequired = math.ceil(goalamount / totalContribution)
-                delta = timedelta(weeks=totalPeriodsRequired)
-                dailyInvest = perUserInvest / 7  # optional: daily equivalent
-            else:
-                totalPeriodsRequired = None
-                delta = None
-                dailyInvest = None
+#         if totalContribution > 0:
+#             if requestData.get('investType') == 0:  # Daily
+#                 totalPeriodsRequired = math.ceil(goalamount / totalContribution)
+#                 delta = timedelta(days=totalPeriodsRequired)
+#                 dailyInvest = perUserInvest
+#             elif requestData.get('investType') == 1:  # Weekly
+#                 totalPeriodsRequired = math.ceil(goalamount / totalContribution)
+#                 delta = timedelta(weeks=totalPeriodsRequired)
+#                 dailyInvest = perUserInvest / 7  # optional: daily equivalent
+#             else:
+#                 totalPeriodsRequired = None
+#                 delta = None
+#                 dailyInvest = None
 
-            if totalPeriodsRequired:
-                start_date_str = requestData.get('startDate', datetime.now().strftime('%Y-%m-%d'))
-                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
-                completion_date = start_date + delta
+#             if totalPeriodsRequired:
+#                 start_date_str = requestData.get('startDate', datetime.now().strftime('%Y-%m-%d'))
+#                 start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+#                 completion_date = start_date + delta
 
-        save_logs(json.dumps(requestData), json.dumps(totalPeriodsRequired), "GOALCALCULATION", "127.0.0.1")
+#         save_logs(json.dumps(requestData), json.dumps(totalPeriodsRequired), "GOALCALCULATION", "127.0.0.1")
 
-        if totalPeriodsRequired:
-            return JSONResponse(
-                content={
-                    "totalPeriodsRequired": totalPeriodsRequired,
-                    "completionDate": completion_date.strftime('%Y-%m-%d') if completion_date else None,
-                    "investment_type": requestData.get('investType'),
-                    "investAmt": goalamount,
-                    "dailyinvest": dailyInvest,
-                    "totalUser": totalUser
-                },
-                status_code=200
-            )
-        else:
-            return JSONResponse(
-                content={"error": "Invalid input or cannot calculate periods."},
-                status_code=400
-            )
+#         if totalPeriodsRequired:
+#             return JSONResponse(
+#                 content={
+#                     "totalPeriodsRequired": totalPeriodsRequired,
+#                     "completionDate": completion_date.strftime('%Y-%m-%d') if completion_date else None,
+#                     "investment_type": requestData.get('investType'),
+#                     "investAmt": goalamount,
+#                     "dailyinvest": dailyInvest,
+#                     "totalUser": totalUser
+#                 },
+#                 status_code=200
+#             )
+#         else:
+#             return JSONResponse(
+#                 content={"error": "Invalid input or cannot calculate periods."},
+#                 status_code=400
+#             )
 
-    except Exception as e:
-        save_logs(json.dumps(requestData), json.dumps({"error": str(e)}), "GOALCALCULATION", "127.0.0.1")
-        return JSONResponse(content={"message": str(e)}, status_code=500)
+#     except Exception as e:
+#         save_logs(json.dumps(requestData), json.dumps({"error": str(e)}), "GOALCALCULATION", "127.0.0.1")
+#         return JSONResponse(content={"message": str(e)}, status_code=500)
 
 @app.post("/v1/Contributors/AllContributors")
 async def getAllTransactions(request: Request):
@@ -585,9 +585,9 @@ async def joinGoal(request: Request):
         else:
             # response = crud.turtleInsert("JOINGOAL",requestData)
             # storeData = jsonable_encoder(response)
-            # save_logs(json.dumps(requestData),json.dumps(storeData),"JOINGOAL","127.0.0.1")
+            save_logs(json.dumps(requestData),json.dumps(calculate_goal_split(goal_db_id=requestData.get("goal_db_id"),goal_amount=requestData.get("goal_amt"), end_date=requestData.get("end_date"), members_count=requestData.get("totaluser"), frequency=requestData.get("frequency"))),"JOINGOAL","127.0.0.1")
             return JSONResponse(
-                content={"status": "success", "data": calculate_goal_split(goal_amount=requestData.get("goal_amt"), end_date=requestData.get("end_date"), members_count=requestData.get("totaluser"), frequency=requestData.get("frequency"))},
+                content={"status": "success", "data": calculate_goal_split(goal_db_id=requestData.get("goal_db_id"),goal_amount=requestData.get("goal_amt"), end_date=requestData.get("end_date"), members_count=requestData.get("totaluser"), frequency=requestData.get("frequency"))},
                 status_code=200
             )
         
@@ -597,7 +597,7 @@ async def joinGoal(request: Request):
 
 
 
-def calculate_goal_split(goal_amount, end_date, members_count, frequency="weekly"):
+def calculate_goal_split(goal_db_id,goal_amount, end_date, members_count, frequency="weekly"):
     # Convert types safely
     goal_amount = float(goal_amount)
     members_count = int(members_count)
@@ -627,6 +627,7 @@ def calculate_goal_split(goal_amount, end_date, members_count, frequency="weekly
     amount_per_member = amount_per_period / members_count
 
     return {
+        "goal_db_id": goal_db_id,
         "goal_amount": goal_amount,
         "frequency": "Daily" if frequency == "0" else "Weekly" if frequency == "1" else "Yearly",
         "start_date": start.strftime("%d/%m/%Y"),
@@ -634,7 +635,7 @@ def calculate_goal_split(goal_amount, end_date, members_count, frequency="weekly
         "total_days": total_days,
         "total_periods": total_periods,
         "members_count": members_count,
-        f"amount_total": round(amount_per_period, 2),
+        f"contribution": round(amount_per_period, 2),
         f"amount_per_member": round(amount_per_member, 2)
     }
 
